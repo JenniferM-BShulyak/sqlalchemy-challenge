@@ -86,5 +86,24 @@ def stations():
     return jsonify(s)
 
 
+@app.route("/api/v1.0/tobs")
+def tobs():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    """Query the dates and temperature observations of the most-active station for the previous year of data.
+    Return a JSON list of temperature observations for the previous year."""
+    # Query
+    date_recent = session.query(Measurement.date).order_by(Measurement.date.desc()).first() # First get the most recent date
+    year_ago = dt.datetime.strptime(date_recent[0], "%Y-%m-%d") - dt.timedelta(days = 365) # Use Time Delta to find query date for 12 months ago
+    temps = session.query(Measurement.date, Measurement.tobs).filter(Measurement.station == "USC00519281").filter(Measurement.date > year_ago).all()
+
+    session.close()
+
+    # Turn stations into list
+    t_at_most_active = [t[0][0] for t in temps]
+
+    return jsonify(t_at_most_active)
+
 if __name__ == '__main__':
     app.run(debug=True)

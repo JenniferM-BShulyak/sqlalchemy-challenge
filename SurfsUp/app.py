@@ -40,7 +40,7 @@ def Homepage():
     return (
         f"Available Routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
-        f"/api/v1.0/station<br/>"
+        f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
         f"/api/v1.0/<start><br/>"
         f"/api/v1.0/<start>/<end>"
@@ -69,27 +69,21 @@ def precipitation():
     return jsonify(precip_dict)
 
 
-@app.route("/api/v1.0/passengers")
-def passengers():
+@app.route("/api/v1.0/stations")
+def stations():
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
-    """Return a list of passenger data including the name, age, and sex of each passenger"""
-    # Query all passengers
-    results = session.query(Passenger.name, Passenger.age, Passenger.sex).all()
+    """Return a JSON list of stations from the dataset."""
+    # Get stations
+    stations = session.query(Station.station).group_by(Station.station).all()
 
     session.close()
 
-    # Create a dictionary from the row data and append to a list of all_passengers
-    all_passengers = []
-    for name, age, sex in results:
-        passenger_dict = {}
-        passenger_dict["name"] = name
-        passenger_dict["age"] = age
-        passenger_dict["sex"] = sex
-        all_passengers.append(passenger_dict)
+    # Turn stations into list
+    s = [st[0] for st in stations]
 
-    return jsonify(all_passengers)
+    return jsonify(s)
 
 
 if __name__ == '__main__':

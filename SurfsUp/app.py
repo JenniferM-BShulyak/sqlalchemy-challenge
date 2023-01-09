@@ -13,7 +13,7 @@ from flask import Flask, jsonify
 #################################################
 # Database Setup
 #################################################
-engine = create_engine("sqlite:///.../Resources/hawaii.sqlite")
+engine = create_engine("sqlite:///../Resources/hawaii.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -22,7 +22,7 @@ Base.prepare(autoload_with=engine)
 
 # Save reference to the table
 Measurement = Base.classes.measurement
-Station = Base.classes.Station
+Stations = Base.classes.station
 
 #################################################
 # Flask Setup
@@ -76,7 +76,7 @@ def stations():
 
     """Return a JSON list of stations from the dataset."""
     # Get stations
-    stations = session.query(Station.station).group_by(Station.station).all()
+    stations = session.query(Stations.station).group_by(Stations.station).all()
 
     session.close()
 
@@ -101,9 +101,52 @@ def tobs():
     session.close()
 
     # Turn stations into list
-    t_at_most_active = [t[0][0] for t in temps]
+    t_at_most_active = [t[1] for t in temps]
 
     return jsonify(t_at_most_active)
+
+
+@app.route("/api/v1.0/<start>")
+def temp_stats(start):
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    # start date formatting 
+    start_date = dt.datetime.strptime(start, "%Y-%m-%d")
+
+    """For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date."""
+    # Query for dates
+    min_t, max_t, avg_t = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).filter(Measurement.date > start_date).all()[0]
+    
+    session.close()
+
+    # Return the stats and format them as json 
+    return jsonify([min_t, round(avg_t,1), max_t])
+
+    
+
+
+@app.route("/api/v1.0/<start>/<end>")
+def temp_stats_with_end(start, end):
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    # start and end date formatting 
+    start_date = dt.datetime.strptime(start, "%Y-%m-%d")
+    end_date = dt.datetime.strptime(end, "%Y-%m-%d")
+
+    """For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date."""
+    # Query for dates
+    min_t, max_t, avg_t = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).filter(Measurement.date > start_date).filter(Measurement.date < end_date).all()[0]
+    
+    session.close()
+
+    # Return the stats and format them as json 
+    return jsonify([min_t, round(avg_t,1), max_t])
+
+    
+
+    
 
 if __name__ == '__main__':
     app.run(debug=True)

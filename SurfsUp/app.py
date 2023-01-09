@@ -42,7 +42,9 @@ def Homepage():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
+        f"For the root below, provide a start date in the form of 'year-month-day'<br/>"
         f"/api/v1.0/<start><br/>"
+        f"For the root below, provide a start date and an end date in the form of 'year-month-day'"
         f"/api/v1.0/<start>/<end>"
 
     )
@@ -63,8 +65,8 @@ def precipitation():
 
     # Create Dictionary
     precip_dict = {}
-    for date, prcp in precip_scores:
-        precip_dict[date] = prcp
+    for date, prcp in precip_scores:   # Loop through the query data to create dictionary
+        precip_dict[date] = prcp     # keys will be dates, and prcp will be the values
 
     return jsonify(precip_dict)
 
@@ -93,9 +95,11 @@ def tobs():
 
     """Query the dates and temperature observations of the most-active station for the previous year of data.
     Return a JSON list of temperature observations for the previous year."""
-    # Query
+    # First, find the most recent data entry and then find the date for 1 year priot to that
     date_recent = session.query(Measurement.date).order_by(Measurement.date.desc()).first() # First get the most recent date
     year_ago = dt.datetime.strptime(date_recent[0], "%Y-%m-%d") - dt.timedelta(days = 365) # Use Time Delta to find query date for 12 months ago
+
+    # Query using the filter to get just the prior year's data. Also use filter to get the most used station
     temps = session.query(Measurement.date, Measurement.tobs).filter(Measurement.station == "USC00519281").filter(Measurement.date > year_ago).all()
 
     session.close()

@@ -44,7 +44,7 @@ def Homepage():
         f"/api/v1.0/tobs<br/>"
         f"For the root below, provide a start date in the form of 'year-month-day'<br/>"
         f"/api/v1.0/<start><br/>"
-        f"For the root below, provide a start date and an end date in the form of 'year-month-day'"
+        f"For the root below, provide a start date and an end date in the form of 'year-month-day'<br/>"
         f"/api/v1.0/<start>/<end>"
 
     )
